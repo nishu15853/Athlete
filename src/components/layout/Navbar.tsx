@@ -49,14 +49,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isTrack
           </div>
         </div>
 
-        {/* System Status Indicator */}
-        <div className="hidden md:flex items-center space-x-2 bg-brand-deepGreenDark/60 px-3 py-1.5 rounded-full border border-brand-cyan/30">
-          <span className={`w-2.5 h-2.5 rounded-full ${isTracking ? 'bg-emerald-400 animate-ping' : 'bg-brand-cyan animate-pulse'}`} />
-          <span className="text-xs font-semibold text-white tracking-wide">
-            {isTracking ? '● AI TRACKING ACTIVE' : '● AI SYSTEM READY'}
-          </span>
-        </div>
-
         {/* Quick Actions & Logout */}
         <div className="flex items-center space-x-3">
           <button

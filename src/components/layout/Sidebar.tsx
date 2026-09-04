@@ -1,15 +1,12 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
   Camera,
   Dumbbell,
   History,
   Cpu,
-  Sparkles,
   LogOut,
   Activity,
-  ShieldCheck,
   ChevronRight,
   User,
   Zap,
@@ -29,8 +26,6 @@ export const Sidebar: React.FC<SidebarProps> = () => {
       label: 'Live Analysis',
       path: '/dashboard',
       icon: Camera,
-      badge: 'LIVE',
-      badgeColor: 'bg-emerald-400/25 text-emerald-300 border-emerald-400/50 shadow-[0_0_8px_rgba(52,211,153,0.3)]',
       end: true,
     },
     {
@@ -38,8 +33,6 @@ export const Sidebar: React.FC<SidebarProps> = () => {
       label: 'Exercise Reps',
       path: '/dashboard/exercise',
       icon: Dumbbell,
-      badge: 'FSM',
-      badgeColor: 'bg-brand-cyan/25 text-brand-cyan border-brand-cyan/40 shadow-[0_0_8px_rgba(114,214,212,0.25)]',
     },
   ];
 
@@ -55,12 +48,6 @@ export const Sidebar: React.FC<SidebarProps> = () => {
       label: 'Architecture & Math',
       path: '/dashboard/about',
       icon: Cpu,
-    },
-    {
-      id: 'overview',
-      label: 'MedTech Overview',
-      path: '/dashboard/overview',
-      icon: LayoutDashboard,
     },
   ];
 
@@ -133,19 +120,9 @@ export const Sidebar: React.FC<SidebarProps> = () => {
                       <span className="truncate tracking-wide">{item.label}</span>
                     </div>
 
-                    {item.badge ? (
-                      <span
-                        className={`ml-1.5 text-[9px] font-mono font-black px-1.5 py-0.5 rounded border shrink-0 ${
-                          isActive
-                            ? 'bg-[#122A24]/90 text-brand-cyan border-[#122A24]'
-                            : item.badgeColor
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    ) : isActive ? (
+                    {isActive && (
                       <ChevronRight className="w-3.5 h-3.5 text-[#122A24] shrink-0" />
-                    ) : null}
+                    )}
                   </>
                 )}
               </NavLink>
@@ -202,38 +179,6 @@ export const Sidebar: React.FC<SidebarProps> = () => {
 
       {/* Bottom Section: Active Athlete Badge, System Telemetry & Sign Out */}
       <div className="relative pt-3 border-t border-white/10 space-y-2 mt-auto">
-        
-        {/* Holographic MedTech Specs Widget */}
-        <div className="p-2 rounded-xl bg-black/35 border border-brand-cyan/20 space-y-1.5 shadow-inner">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1.5 text-brand-cyan">
-              <Sparkles className="w-3 h-3 text-brand-cyan animate-pulse" />
-              <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider">
-                Kinematics Engine
-              </span>
-            </div>
-            <span className="text-[9px] font-mono font-bold text-emerald-300 bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30">
-              WASM
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1 text-[9px] font-mono text-gray-300">
-            <div className="bg-white/5 px-1.5 py-0.5 rounded flex items-center space-x-1 border border-white/5">
-              <span className="text-brand-cyan font-bold">33</span>
-              <span className="text-gray-400">Joints</span>
-            </div>
-            <div className="bg-white/5 px-1.5 py-0.5 rounded flex items-center space-x-1 border border-white/5">
-              <span className="text-emerald-400 font-bold">atan2</span>
-              <span className="text-gray-400">Trig</span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1 text-[8.5px] text-emerald-200/70 pt-0.5 font-medium">
-            <ShieldCheck className="w-3 h-3 text-brand-cyan shrink-0" />
-            <span className="truncate">100% Client-Side Private</span>
-          </div>
-        </div>
-
         {/* Active Athlete Profile Strip */}
         <div className="flex items-center justify-between px-2 py-1.5 rounded-xl bg-white/5 border border-white/10">
           <div className="flex items-center space-x-2 min-w-0">

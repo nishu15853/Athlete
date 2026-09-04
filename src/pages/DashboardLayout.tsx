@@ -1,15 +1,11 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { DisclaimerBanner } from '../components/layout/DisclaimerBanner';
 import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 
 export const DashboardLayout: React.FC = () => {
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden bg-brand-bgLight selection:bg-brand-cyan selection:text-brand-deepGreen">
-      {/* Top Medical & Prototype Disclaimer Banner */}
-      <DisclaimerBanner />
-
       {/* Persistent MedTech Header / Navbar */}
       <Navbar />
 
