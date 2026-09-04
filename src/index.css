@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F5F5F3;
+    color: #1A1A1A;
+  }
+}
+
+/* Custom Glassmorphism & Healthcare Aesthetics */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(41, 77, 69, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(114, 214, 212, 0.2);
+}
+
+/* AI Skeleton Scanning Line Effect */
+@keyframes scanline {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    top: 98%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #72D6D4, transparent);
+  box-shadow: 0 0 12px #72D6D4, 0 0 20px #72D6D4;
+  animation: scanline 3.5s ease-in-out infinite alternate;
+}
+
+/* Pulse Glowing Dot */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(114, 214, 212, 0.8);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 18px rgba(114, 214, 212, 1);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s infinite;
+}

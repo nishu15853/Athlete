@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "agentation": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "agentation-mcp",
+        "server"
+      ]
+    }
+  }
+}
