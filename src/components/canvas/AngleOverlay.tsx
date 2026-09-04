@@ -7,6 +7,7 @@ interface AngleOverlayProps {
   angles: JointAngles;
   canvasWidth: number;
   canvasHeight: number;
+  isMirrored?: boolean;
 }
 
 export const AngleOverlay: React.FC<AngleOverlayProps> = ({
@@ -14,6 +15,7 @@ export const AngleOverlay: React.FC<AngleOverlayProps> = ({
   angles,
   canvasWidth,
   canvasHeight,
+  isMirrored = false,
 }) => {
   if (!landmarks || landmarks.length < 29 || canvasWidth === 0 || canvasHeight === 0) {
     return null;
@@ -24,7 +26,7 @@ export const AngleOverlay: React.FC<AngleOverlayProps> = ({
     const lm = landmarks[index];
     if (!lm) return null;
     return {
-      x: lm.x * canvasWidth,
+      x: (isMirrored ? 1 - lm.x : lm.x) * canvasWidth,
       y: lm.y * canvasHeight,
     };
   };

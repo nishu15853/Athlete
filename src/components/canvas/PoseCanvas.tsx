@@ -233,7 +233,12 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
       />
 
       {/* Foreground Canvas for Skeleton & Biomechanical Mesh */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+      <canvas
+        ref={canvasRef}
+        className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${
+          useSimulatedMode ? '' : 'transform -scale-x-100'
+        }`}
+      />
 
       {/* Real-time Angle Vertex Overlay */}
       {angles && currentLandmarks.length >= 29 && (
@@ -242,6 +247,7 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
           angles={angles}
           canvasWidth={dimensions.width}
           canvasHeight={dimensions.height}
+          isMirrored={!useSimulatedMode}
         />
       )}
 

@@ -85,7 +85,7 @@ export const ExercisePage: React.FC = () => {
   const exercises: ExerciseType[] = ['Squat', 'Arm Raise', 'Lunge'];
 
   return (
-    <div className="h-[calc(100vh-theme(spacing.16))] max-h-[calc(100vh-theme(spacing.16))] overflow-hidden flex flex-col space-y-3">
+    <div className="h-full max-h-full overflow-hidden flex flex-col space-y-3">
       {/* Exercise Selector & Top Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 shrink-0 bg-white p-3 rounded-2xl border border-gray-200/80 shadow-sm">
         <div className="flex items-center space-x-2">
