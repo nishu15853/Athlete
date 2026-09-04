@@ -1,4 +1,11 @@
-export type ExerciseType = 'General Posture' | 'Squat' | 'Arm Raise' | 'Lunge';
+export type ExerciseType =
+  | 'General Posture'
+  | 'Post-Op Posture'
+  | 'Geriatric Posture'
+  | 'Wellness Posture'
+  | 'Squat'
+  | 'Arm Raise'
+  | 'Lunge';
 
 export type RepPhase = 'UP' | 'DOWN' | 'INFLECTION';
 
@@ -19,6 +26,7 @@ export interface SessionRecord {
   movementQuality: 'Excellent' | 'Good' | 'Needs Improvement';
   issuesDetected: number;
   exerciseType: ExerciseType;
+  patientCondition?: string;
   repsCompleted?: number;
   repsDetail?: Repetition[];
   anglesSummary?: {

@@ -11,9 +11,11 @@ interface UseCameraReturn {
   stream: MediaStream | null;
   isStreaming: boolean;
   cameraError: string | null;
+  isUploadedVideo: boolean;
   startCamera: () => Promise<boolean>;
   stopCamera: () => void;
   toggleCamera: () => Promise<boolean>;
+  loadVideoFile: (file: File) => Promise<boolean>;
 }
 
 export function useCamera({
@@ -25,6 +27,7 @@ export function useCamera({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isUploadedVideo, setIsUploadedVideo] = useState<boolean>(false);
 
   const stopCamera = useCallback(() => {
     if (stream) {
@@ -32,9 +35,45 @@ export function useCamera({
       setStream(null);
     }
     if (videoRef.current) {
+      videoRef.current.pause();
       videoRef.current.srcObject = null;
+      if (videoRef.current.src) {
+        URL.revokeObjectURL(videoRef.current.src);
+        videoRef.current.removeAttribute('src');
+      }
     }
     setIsStreaming(false);
+    setIsUploadedVideo(false);
+  }, [stream]);
+
+  const loadVideoFile = useCallback(async (file: File): Promise<boolean> => {
+    // Stop any active camera stream
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+    setCameraError(null);
+
+    try {
+      const url = URL.createObjectURL(file);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.src = url;
+        videoRef.current.loop = true;
+        videoRef.current.muted = true;
+        await videoRef.current.play();
+        setIsStreaming(true);
+        setIsUploadedVideo(true);
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Failed to play uploaded video file:', err);
+      setCameraError('Unable to play video file. Please check video format (MP4/WebM).');
+      setIsStreaming(false);
+      setIsUploadedVideo(false);
+      return false;
+    }
   }, [stream]);
 
   const startCamera = useCallback(async (): Promise<boolean> => {
@@ -44,6 +83,7 @@ export function useCamera({
     }
 
     setCameraError(null);
+    setIsUploadedVideo(false);
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -104,8 +144,10 @@ export function useCamera({
     stream,
     isStreaming,
     cameraError,
+    isUploadedVideo,
     startCamera,
     stopCamera,
     toggleCamera,
+    loadVideoFile,
   };
 }

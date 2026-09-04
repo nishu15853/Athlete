@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Square, Save, Clock, Sparkles } from 'lucide-react';
+import { Clock, Save, Sparkles, HeartPulse, UserCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Landmark, JointAngles, PostureStatus, MobilityIndex } from '../../types/biomechanics';
+import { Landmark, JointAngles, PostureStatus, MobilityIndex, PatientCondition, JointStress } from '../../types/biomechanics';
 import { SessionRecord } from '../../types/workout';
 import { computeJointAngles } from '../../utils/math/kinematics';
 import { evaluatePosture } from '../../utils/postureRules';
@@ -18,6 +18,7 @@ export const LiveAnalysisPage: React.FC = () => {
   const [isTracking, setIsTracking] = useState<boolean>(false);
   const [sessionSeconds, setSessionSeconds] = useState<number>(0);
   const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [patientCondition, setPatientCondition] = useState<PatientCondition>('general');
 
   const [angles, setAngles] = useState<JointAngles>({
     leftElbow: 180,
@@ -29,6 +30,14 @@ export const LiveAnalysisPage: React.FC = () => {
     shoulderAlignment: 'Balanced',
     hipAlignment: 'Balanced',
     headAlignment: 'Aligned',
+  });
+
+  const [jointStress, setJointStress] = useState<JointStress>({
+    leftKnee: 'normal',
+    rightKnee: 'normal',
+    leftElbow: 'normal',
+    rightElbow: 'normal',
+    spine: 'normal',
   });
 
   const [postureStatus, setPostureStatus] = useState<PostureStatus>({
@@ -76,9 +85,10 @@ export const LiveAnalysisPage: React.FC = () => {
     const computedAngles = computeJointAngles(detectedLandmarks);
     setAngles(computedAngles);
 
-    const evaluation = evaluatePosture(detectedLandmarks, computedAngles);
+    const evaluation = evaluatePosture(detectedLandmarks, computedAngles, patientCondition);
     setPostureStatus(evaluation.status);
     setMobility(evaluation.mobility);
+    setJointStress(evaluation.stress);
 
     accumulatedScoresRef.current.push(evaluation.status.overallScore);
   };
@@ -100,7 +110,7 @@ export const LiveAnalysisPage: React.FC = () => {
       averagePostureScore: avgScore,
       movementQuality: avgScore >= 90 ? 'Excellent' : avgScore >= 75 ? 'Good' : 'Needs Improvement',
       issuesDetected: postureStatus.status === 'GOOD' ? 0 : postureStatus.feedbackMessages.length,
-      exerciseType: 'General Posture',
+      exerciseType: `${patientCondition === 'post-op' ? 'Post-Op' : patientCondition === 'geriatric' ? 'Geriatric' : 'Wellness'} Posture`,
       anglesSummary: {
         avgLeftKnee: angles.leftKnee,
         avgRightKnee: angles.rightKnee,
@@ -128,8 +138,9 @@ export const LiveAnalysisPage: React.FC = () => {
   return (
     <div className="h-full max-h-full overflow-hidden flex flex-col space-y-3">
       {/* Top Controls & Telemetry Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 shrink-0 bg-white p-3 rounded-2xl border border-gray-200/80 shadow-sm">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 shrink-0 bg-white p-2.5 sm:p-3 rounded-2xl border border-gray-200/80 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Duration Clock */}
           <div className="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
             <Clock className="w-4 h-4 text-brand-deepGreen" />
             <span className="font-mono text-sm font-bold text-gray-800 tracking-wider">
@@ -137,6 +148,7 @@ export const LiveAnalysisPage: React.FC = () => {
             </span>
           </div>
 
+          {/* Tracking Status */}
           <div
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
               isTracking
@@ -150,6 +162,21 @@ export const LiveAnalysisPage: React.FC = () => {
               }`}
             />
             <span>{isTracking ? 'TRACKING LIVE' : 'SESSION IDLE'}</span>
+          </div>
+
+          {/* Condition Selector (PPT Slide 3 & 4: Adaptive Recovery Engine) */}
+          <div className="flex items-center space-x-1.5 bg-brand-bgLight p-1 rounded-xl border border-brand-cyan/30 text-xs">
+            <HeartPulse className="w-3.5 h-3.5 text-brand-deepGreen ml-1" />
+            <span className="text-[11px] font-bold text-gray-700 hidden sm:inline">Condition:</span>
+            <select
+              value={patientCondition}
+              onChange={(e) => setPatientCondition(e.target.value as PatientCondition)}
+              className="bg-white text-brand-deepGreen font-extrabold text-xs px-2 py-1 rounded-lg border border-gray-200 outline-none focus:ring-1 focus:ring-brand-cyan cursor-pointer"
+            >
+              <option value="general">General Wellness / Athlete</option>
+              <option value="post-op">Post-Op Rehabilitation (Gentle)</option>
+              <option value="geriatric">Geriatric Care (Stability)</option>
+            </select>
           </div>
         </div>
 
@@ -185,6 +212,7 @@ export const LiveAnalysisPage: React.FC = () => {
             setIsTracking={setIsTracking}
             onLandmarksDetected={handleLandmarksDetected}
             angles={angles}
+            stress={jointStress}
           />
         </div>
 

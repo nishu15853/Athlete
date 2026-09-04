@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Camera, CameraOff, AlertTriangle, RefreshCw, Sparkles, UserCheck } from 'lucide-react';
-import { Landmark, JointAngles } from '../../types/biomechanics';
+import { Camera, CameraOff, AlertTriangle, RefreshCw, Sparkles, UserCheck, Upload, Flame } from 'lucide-react';
+import { Landmark, JointAngles, JointStress } from '../../types/biomechanics';
 import { LANDMARKS } from '../../utils/math/kinematics';
 import { useCamera } from '../../hooks/useCamera';
 import { usePoseLandmarker } from '../../hooks/usePoseLandmarker';
@@ -12,6 +12,7 @@ interface PoseCanvasProps {
   isTracking: boolean;
   setIsTracking: (tracking: boolean) => void;
   angles?: JointAngles;
+  stress?: JointStress;
 }
 
 export const PoseCanvas: React.FC<PoseCanvasProps> = ({
@@ -20,18 +21,30 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
   isTracking,
   setIsTracking,
   angles,
+  stress,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 640,
     height: 480,
   });
 
   const [currentLandmarks, setCurrentLandmarks] = useState<Landmark[]>([]);
+  const [showHeatmap, setShowHeatmap] = useState<boolean>(true);
 
-  // Camera management hook
-  const { videoRef, isStreaming, cameraError, startCamera, stopCamera, toggleCamera } = useCamera({
+  // Camera management hook (supports live webcam and pre-recorded video clips)
+  const {
+    videoRef,
+    isStreaming,
+    cameraError,
+    isUploadedVideo,
+    startCamera,
+    stopCamera,
+    loadVideoFile,
+  } = useCamera({
     width: 640,
     height: 480,
     facingMode: 'user',
@@ -61,7 +74,7 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
     onNoPersonDetected,
   });
 
-  // Sync isTracking state
+  // Toggle Camera
   const handleToggleTracking = async () => {
     if (isTracking) {
       stopCamera();
@@ -77,10 +90,25 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
     }
   };
 
+  // Enable Demo / Simulated Mode
   const handleEnableDemoMode = () => {
     stopCamera();
     enableSimulatedMode();
     setIsTracking(true);
+  };
+
+  // Video File Upload Handler (Mode 2: Rehab Video File Handling)
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    disableSimulatedMode();
+    const ok = await loadVideoFile(file);
+    if (ok) {
+      setIsTracking(true);
+    }
+    // reset input so user can re-upload same file if desired
+    e.target.value = '';
   };
 
   // Resize canvas according to container
@@ -99,7 +127,11 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Draw skeleton overlay
+  // Determine if feed should be mirrored
+  // Only mirror when using user-facing webcam (NOT simulated grid or uploaded video clips)
+  const shouldMirror = !useSimulatedMode && !isUploadedVideo;
+
+  // Draw skeleton & biomechanical stress overlay
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -184,18 +216,26 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
 
     ctx.shadowBlur = 0;
 
+    // Helper for stress color
+    const getJointColor = (jointStress?: 'normal' | 'moderate' | 'high', defaultColor: string = '#72D6D4') => {
+      if (!showHeatmap || !jointStress) return defaultColor;
+      if (jointStress === 'high') return '#EF4444'; // Red (High Strain)
+      if (jointStress === 'moderate') return '#F59E0B'; // Amber (Moderate Strain)
+      return '#10B981'; // Green (Safe / Optimal)
+    };
+
     const keyJoints = [
-      { idx: LANDMARKS.NOSE, color: '#72D6D4', radius: 6 },
-      { idx: LANDMARKS.LEFT_SHOULDER, color: '#294D45', radius: 7 },
-      { idx: LANDMARKS.RIGHT_SHOULDER, color: '#294D45', radius: 7 },
-      { idx: LANDMARKS.LEFT_ELBOW, color: '#7A3038', radius: 6 },
-      { idx: LANDMARKS.RIGHT_ELBOW, color: '#7A3038', radius: 6 },
+      { idx: LANDMARKS.NOSE, color: getJointColor(stress?.spine, '#72D6D4'), radius: 6 },
+      { idx: LANDMARKS.LEFT_SHOULDER, color: getJointColor(stress?.spine, '#294D45'), radius: 7 },
+      { idx: LANDMARKS.RIGHT_SHOULDER, color: getJointColor(stress?.spine, '#294D45'), radius: 7 },
+      { idx: LANDMARKS.LEFT_ELBOW, color: getJointColor(stress?.leftElbow, '#7A3038'), radius: 6 },
+      { idx: LANDMARKS.RIGHT_ELBOW, color: getJointColor(stress?.rightElbow, '#7A3038'), radius: 6 },
       { idx: LANDMARKS.LEFT_WRIST, color: '#72D6D4', radius: 5 },
       { idx: LANDMARKS.RIGHT_WRIST, color: '#72D6D4', radius: 5 },
       { idx: LANDMARKS.LEFT_HIP, color: '#294D45', radius: 7 },
       { idx: LANDMARKS.RIGHT_HIP, color: '#294D45', radius: 7 },
-      { idx: LANDMARKS.LEFT_KNEE, color: '#10B981', radius: 7 },
-      { idx: LANDMARKS.RIGHT_KNEE, color: '#10B981', radius: 7 },
+      { idx: LANDMARKS.LEFT_KNEE, color: getJointColor(stress?.leftKnee, '#10B981'), radius: 8 },
+      { idx: LANDMARKS.RIGHT_KNEE, color: getJointColor(stress?.rightKnee, '#10B981'), radius: 8 },
       { idx: LANDMARKS.LEFT_ANKLE, color: '#72D6D4', radius: 5 },
       { idx: LANDMARKS.RIGHT_ANKLE, color: '#72D6D4', radius: 5 },
     ];
@@ -215,39 +255,50 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
         ctx.fill();
       }
     });
-  }, [currentLandmarks, dimensions, useSimulatedMode]);
+  }, [currentLandmarks, dimensions, useSimulatedMode, showHeatmap, stress]);
 
   return (
     <div
       ref={containerRef}
       className="relative w-full h-full min-h-[320px] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-brand-cyan/20 flex items-center justify-center"
     >
-      {/* Underlying Webcam Video */}
+      {/* Hidden File Input for Video Processing */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime"
+        className="hidden"
+        onChange={handleVideoUpload}
+      />
+
+      {/* Underlying Video Feed (Webcam or Uploaded File) */}
       <video
         ref={videoRef}
         playsInline
         muted
-        className={`absolute inset-0 w-full h-full object-cover transform -scale-x-100 ${
-          useSimulatedMode ? 'hidden' : 'block'
-        }`}
+        className={`absolute inset-0 w-full h-full object-cover ${
+          shouldMirror ? 'transform -scale-x-100' : ''
+        } ${useSimulatedMode ? 'hidden' : 'block'}`}
       />
 
       {/* Foreground Canvas for Skeleton & Biomechanical Mesh */}
       <canvas
         ref={canvasRef}
         className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${
-          useSimulatedMode ? '' : 'transform -scale-x-100'
+          shouldMirror ? 'transform -scale-x-100' : ''
         }`}
       />
 
-      {/* Real-time Angle Vertex Overlay */}
+      {/* Real-time Angle Vertex & Stress Heatmap Overlay */}
       {angles && currentLandmarks.length >= 29 && (
         <AngleOverlay
           landmarks={currentLandmarks}
           angles={angles}
           canvasWidth={dimensions.width}
           canvasHeight={dimensions.height}
-          isMirrored={!useSimulatedMode}
+          isMirrored={shouldMirror}
+          stress={stress}
+          showHeatmap={showHeatmap}
         />
       )}
 
@@ -269,18 +320,36 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
               ? 'CAMERA STANDBY'
               : useSimulatedMode
               ? 'SIMULATED DEMO POSE'
+              : isUploadedVideo
+              ? 'REHAB VIDEO ANALYSIS'
               : personDetected
               ? 'SUBJECT DETECTED'
               : 'ACQUIRING SUBJECT...'}
           </span>
         </div>
 
-        {personDetected && (
-          <div className="flex items-center space-x-1 text-xs font-bold text-brand-cyan bg-brand-cyan/20 px-3 py-1 rounded-full border border-brand-cyan/40 backdrop-blur-md">
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>33 LANDMARKS LOCKED</span>
-          </div>
-        )}
+        {/* Heat Map Toggle & Status */}
+        <div className="flex items-center space-x-2 pointer-events-auto">
+          <button
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md transition-all flex items-center space-x-1 ${
+              showHeatmap
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-glow-rose'
+                : 'bg-black/50 text-gray-300 border-white/10'
+            }`}
+            title="Toggle Joint Stress Heat Map (Slide 7 Feature)"
+          >
+            <Flame className="w-3 h-3 text-rose-400" />
+            <span>Heat Map: {showHeatmap ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {personDetected && (
+            <div className="flex items-center space-x-1 text-xs font-bold text-brand-cyan bg-brand-cyan/20 px-3 py-1 rounded-full border border-brand-cyan/40 backdrop-blur-md">
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>33 LANDMARKS LOCKED</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading Model Overlay */}
@@ -300,23 +369,30 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
           <div>
             <h3 className="font-extrabold text-lg text-white">AI Vision Analysis Offline</h3>
             <p className="text-xs text-gray-400 mt-1">
-              Start camera to track 33 3D skeletal landmarks or test in Simulated Mode.
+              Start camera, upload a rehab therapy video clip, or test in Simulated Mode.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <button
               onClick={handleToggleTracking}
-              className="px-5 py-2.5 bg-brand-cyan hover:bg-brand-cyanDark text-brand-deepGreen font-extrabold rounded-xl text-xs transition-all shadow-glow-cyan flex items-center justify-center space-x-2"
+              className="px-4 py-2.5 bg-brand-cyan hover:bg-brand-cyanDark text-brand-deepGreen font-extrabold rounded-xl text-xs transition-all shadow-glow-cyan flex items-center justify-center space-x-1.5"
             >
               <Camera className="w-4 h-4" />
-              <span>Start Camera</span>
+              <span>Live Camera</span>
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-2.5 bg-brand-deepGreen hover:bg-brand-deepGreenDark text-white font-bold rounded-xl text-xs border border-brand-cyan/30 transition-all flex items-center justify-center space-x-1.5"
+            >
+              <Upload className="w-4 h-4 text-brand-cyan" />
+              <span>Upload Video</span>
             </button>
             <button
               onClick={handleEnableDemoMode}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition-all flex items-center justify-center space-x-1.5"
+              className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition-all flex items-center justify-center space-x-1.5"
             >
               <Sparkles className="w-4 h-4 text-brand-cyan" />
-              <span>Simulate Mode</span>
+              <span>Simulate</span>
             </button>
           </div>
         </div>
@@ -325,13 +401,23 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
       {/* Bottom Floating Control Bar */}
       {isTracking && (
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between z-10">
-          <button
-            onClick={handleToggleTracking}
-            className="px-4 py-2 bg-rose-600/80 hover:bg-rose-600 text-white font-bold text-xs rounded-xl backdrop-blur-md border border-rose-400/40 shadow-lg flex items-center space-x-1.5 transition-all"
-          >
-            <CameraOff className="w-4 h-4" />
-            <span>Stop Camera</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleToggleTracking}
+              className="px-4 py-2 bg-rose-600/80 hover:bg-rose-600 text-white font-bold text-xs rounded-xl backdrop-blur-md border border-rose-400/40 shadow-lg flex items-center space-x-1.5 transition-all"
+            >
+              <CameraOff className="w-4 h-4" />
+              <span>Stop Feed</span>
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-2 bg-black/60 hover:bg-black/80 text-white font-semibold text-xs rounded-xl backdrop-blur-md border border-white/20 flex items-center space-x-1.5 transition-all"
+            >
+              <Upload className="w-3.5 h-3.5 text-brand-cyan" />
+              <span>{isUploadedVideo ? 'Switch Video' : 'Upload Video'}</span>
+            </button>
+          </div>
 
           {!useSimulatedMode && (
             <button
@@ -352,12 +438,20 @@ export const PoseCanvas: React.FC<PoseCanvasProps> = ({
             <AlertTriangle className="w-4 h-4 text-rose-300 shrink-0" />
             <span>{cameraError || modelError}</span>
           </div>
-          <button
-            onClick={handleEnableDemoMode}
-            className="ml-2 px-3 py-1 bg-brand-cyan text-brand-deepGreen font-extrabold rounded-lg text-[11px] shrink-0"
-          >
-            Enable Demo Mode
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-1 bg-white/20 text-white font-bold rounded-lg text-[11px]"
+            >
+              Upload Video
+            </button>
+            <button
+              onClick={handleEnableDemoMode}
+              className="px-3 py-1 bg-brand-cyan text-brand-deepGreen font-extrabold rounded-lg text-[11px] shrink-0"
+            >
+              Demo Mode
+            </button>
+          </div>
         </div>
       )}
     </div>

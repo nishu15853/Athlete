@@ -56,6 +56,16 @@ export interface SymmetryMetrics {
   status: 'Balanced' | 'Mild Asymmetry' | 'Severe Asymmetry';
 }
 
+export type PatientCondition = 'general' | 'post-op' | 'geriatric';
+
+export interface JointStress {
+  leftKnee: 'normal' | 'moderate' | 'high';
+  rightKnee: 'normal' | 'moderate' | 'high';
+  leftElbow: 'normal' | 'moderate' | 'high';
+  rightElbow: 'normal' | 'moderate' | 'high';
+  spine: 'normal' | 'moderate' | 'high';
+}
+
 export type ActiveTab = 'landing' | 'dashboard' | 'exercise' | 'history' | 'about' | 'overview';
 
 // Re-export workout types for seamless interoperability
