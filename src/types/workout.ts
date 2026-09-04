@@ -5,7 +5,9 @@ export type ExerciseType =
   | 'Wellness Posture'
   | 'Squat'
   | 'Arm Raise'
-  | 'Lunge';
+  | 'Lunge'
+  | 'Cricket Stance'
+  | 'Yoga Pose';
 
 export type RepPhase = 'UP' | 'DOWN' | 'INFLECTION';
 

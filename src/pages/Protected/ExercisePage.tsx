@@ -82,7 +82,7 @@ export const ExercisePage: React.FC = () => {
     }, 1200);
   };
 
-  const exercises: ExerciseType[] = ['Squat', 'Arm Raise', 'Lunge'];
+  const exercises: ExerciseType[] = ['Squat', 'Arm Raise', 'Lunge', 'Cricket Stance', 'Yoga Pose'];
 
   return (
     <div className="h-full max-h-full overflow-hidden flex flex-col space-y-3">

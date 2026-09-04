@@ -96,6 +96,42 @@ export function useRepCounter(initialExercise: ExerciseType = 'Squat'): UseRepCo
           setFormQuality('GOOD');
           setFeedback('✓ Strong lunge rep! Keep your torso upright.');
         }
+      } else if (selectedExercise === 'Cricket Stance') {
+        // PPT Slide 5: Modular Cricket Biomechanical Kinematics
+        const isAthleticBend = avgKnee >= 120 && avgKnee <= 150;
+        const isShoulderLevel = angles.shoulderAlignment === 'Balanced';
+
+        if (isAthleticBend && isShoulderLevel && phase === 'UP') {
+          setPhase('DOWN');
+          setFeedback('Balanced athletic stance locked! Hold position.');
+        } else if (phase === 'DOWN' && (avgKnee > 155 || !isAthleticBend)) {
+          setPhase('UP');
+          setRepCount((prev) => {
+            const next = prev + 1;
+            confetti({ particleCount: 40, spread: 50 });
+            return next;
+          });
+          setFormQuality('GOOD');
+          setFeedback('✓ Solid cricket stance hold! Optimal center of gravity.');
+        }
+      } else if (selectedExercise === 'Yoga Pose') {
+        // PPT Slide 5: Yoga Asana Stability
+        const isArmsExtended = avgElbow > 140;
+        const isSpineAligned = angles.headAlignment === 'Aligned';
+
+        if (isArmsExtended && isSpineAligned && phase === 'UP') {
+          setPhase('DOWN');
+          setFeedback('Asana form detected! Hold breath & maintain focus.');
+        } else if (phase === 'DOWN' && avgElbow < 120) {
+          setPhase('UP');
+          setRepCount((prev) => {
+            const next = prev + 1;
+            confetti({ particleCount: 40, spread: 50 });
+            return next;
+          });
+          setFormQuality('GOOD');
+          setFeedback('✓ Completed yoga stability hold! Harmonious alignment.');
+        }
       }
     },
     [selectedExercise, phase]
