@@ -63,9 +63,29 @@ export const Sidebar: React.FC<SidebarProps> = () => {
       <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-cyan/15 rounded-full blur-2xl pointer-events-none" />
       <div className="absolute top-1/2 -left-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Top Section: System Pulse & Navigation */}
-      <div className="relative space-y-3.5 w-full">
-        
+      {/* Top Section: Brand Logo, System Pulse & Navigation */}
+      <div className="relative space-y-3 w-full">
+        {/* Brand Title & Tagline */}
+        <div 
+          onClick={() => navigate('/dashboard')} 
+          className="flex items-center space-x-2.5 px-1 py-1 cursor-pointer group select-none pb-1"
+        >
+          <div className="w-9 h-9 rounded-xl bg-brand-cyan/20 border border-brand-cyan/60 flex items-center justify-center text-brand-cyan group-hover:scale-105 transition-transform shadow-glow-cyan shrink-0">
+            <Activity className="w-5 h-5 animate-pulse-glow" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5">
+              <span className="font-extrabold text-base tracking-wider text-white truncate">ATHLETEMIND</span>
+              <span className="bg-brand-cyan text-brand-deepGreen font-black text-[9px] px-1.5 py-0.2 rounded-full uppercase tracking-widest shrink-0">
+                AI
+              </span>
+            </div>
+            <p className="text-[10px] text-brand-cyan/80 font-medium tracking-tight truncate">
+              Move Better. Recover Smarter.
+            </p>
+          </div>
+        </div>
+
         {/* MedTech System Beacon Pill */}
         <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-black/35 border border-brand-cyan/20 shadow-inner">
           <div className="flex items-center space-x-2">

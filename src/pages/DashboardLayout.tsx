@@ -1,24 +1,17 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 
 export const DashboardLayout: React.FC = () => {
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden bg-brand-bgLight selection:bg-brand-cyan selection:text-brand-deepGreen">
-      {/* Persistent MedTech Header / Navbar */}
-      <Navbar />
+    <div className="h-screen w-full flex flex-row overflow-hidden bg-brand-bgLight selection:bg-brand-cyan selection:text-brand-deepGreen">
+      {/* Fixed Left Navigation Sidebar */}
+      <Sidebar />
 
-      {/* Main Application Content Container with Fixed Left Navigation */}
-      <div className="flex-1 flex flex-row w-full overflow-hidden">
-        {/* Fixed Left Navigation Sidebar */}
-        <Sidebar />
-
-        {/* Dynamic Route Content */}
-        <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 lg:p-6">
-          <Outlet />
-        </main>
-      </div>
+      {/* Dynamic Route Content */}
+      <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 lg:p-6">
+        <Outlet />
+      </main>
     </div>
   );
 };
